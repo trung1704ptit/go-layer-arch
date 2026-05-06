@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/go-layer-arch/initializers"
-	"github.com/go-layer-arch/models"
+	"github.com/go-layer-arch/internal/initializers"
+	"github.com/go-layer-arch/internal/models"
 	"github.com/go-layer-arch/pkg/utils"
 )
 

@@ -75,21 +75,45 @@ This project includes a preconfigured `.air.toml` file:
 - watches Go and env/template files
 - rebuilds and restarts on file changes
 
+### 6) Run SQL migrations
+
+This project uses versioned SQL migrations in `migrations/` with `golang-migrate`.
+
+Run all pending migrations:
+
+```bash
+make migrate-up
+```
+
+Rollback all applied migrations:
+
+```bash
+make migrate-down
+```
+
+Create a new migration file pair (sequential: `00001_`, `00002_`, ...):
+
+```bash
+make migrate-create name=add_user_phone
+```
+This creates:
+
+- `migrations/0000X_<name>.up.sql`
+- `migrations/0000X_<name>.down.sql`
+
+Then edit both generated files and add your SQL.
+
 ## Project Structure
 
 ```text
 go-layer/
-├── controllers/      # HTTP handlers (request/response only)
-├── services/         # Business logic layer
-├── repositories/     # Data access layer (GORM/Postgres queries)
-├── routes/           # Route registration and middleware wiring
-├── middleware/       # Cross-cutting HTTP middleware (auth, etc.)
-├── models/           # GORM models and request/response structs
-├── initializers/     # Config loading and DB connection bootstrap
-├── utils/            # Shared helpers (tokens, password hashing)
-├── migrate/          # Database migration entrypoint
+├── cmd/              # App entrypoints
+├── internal/         # Application-private layers (controllers/services/repos/...)
+├── migrate/          # Migration runner entrypoint
+├── migrations/       # Versioned SQL schema migrations (*.up.sql/*.down.sql)
 ├── cmd/main.go       # Application bootstrap and dependency wiring
 ├── pkg/shared/       # Shared response helpers
+├── pkg/utils/        # Shared utility helpers
 ├── app.env           # Runtime environment variables
 └── example.env       # Environment template
 ```
