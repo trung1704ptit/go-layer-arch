@@ -7,15 +7,15 @@ import (
 	"time"
 
 	"github.com/go-layer-arch/models"
-	"gorm.io/gorm"
+	"github.com/go-layer-arch/repositories"
 )
 
 type PostService struct {
-	DB *gorm.DB
+	postRepository repositories.PostRepository
 }
 
-func NewPostService(db *gorm.DB) PostService {
-	return PostService{DB: db}
+func NewPostService(postRepository repositories.PostRepository) PostService {
+	return PostService{postRepository: postRepository}
 }
 
 func (ps *PostService) Create(payload *models.CreatePostRequest, currentUser models.User) (*models.Post, error) {
@@ -29,21 +29,20 @@ func (ps *PostService) Create(payload *models.CreatePostRequest, currentUser mod
 		UpdatedAt: now,
 	}
 
-	result := ps.DB.Create(&newPost)
-	if result.Error != nil && strings.Contains(result.Error.Error(), "duplicate key") {
+	err := ps.postRepository.Create(&newPost)
+	if err != nil && strings.Contains(err.Error(), "duplicate key") {
 		return nil, ErrPostAlreadyExists
 	}
-	if result.Error != nil {
-		return nil, fmt.Errorf("create post: %w", result.Error)
+	if err != nil {
+		return nil, fmt.Errorf("create post: %w", err)
 	}
 
 	return &newPost, nil
 }
 
 func (ps *PostService) Update(postID string, payload *models.UpdatePost, currentUser models.User) (*models.Post, error) {
-	var updatedPost models.Post
-	result := ps.DB.First(&updatedPost, "id = ?", postID)
-	if result.Error != nil {
+	updatedPost, err := ps.postRepository.FindByID(postID)
+	if err != nil {
 		return nil, ErrPostNotFound
 	}
 
@@ -56,18 +55,19 @@ func (ps *PostService) Update(postID string, payload *models.UpdatePost, current
 		UpdatedAt: time.Now(),
 	}
 
-	ps.DB.Model(&updatedPost).Updates(postToUpdate)
-	return &updatedPost, nil
+	if err := ps.postRepository.Update(updatedPost, postToUpdate); err != nil {
+		return nil, fmt.Errorf("update post: %w", err)
+	}
+	return updatedPost, nil
 }
 
 func (ps *PostService) FindByID(postID string) (*models.Post, error) {
-	var post models.Post
-	result := ps.DB.First(&post, "id = ?", postID)
-	if result.Error != nil {
+	post, err := ps.postRepository.FindByID(postID)
+	if err != nil {
 		return nil, ErrPostNotFound
 	}
 
-	return &post, nil
+	return post, nil
 }
 
 func (ps *PostService) FindAll(page string, limit string) ([]models.Post, error) {
@@ -75,18 +75,16 @@ func (ps *PostService) FindAll(page string, limit string) ([]models.Post, error)
 	intLimit, _ := strconv.Atoi(limit)
 	offset := (intPage - 1) * intLimit
 
-	var posts []models.Post
-	result := ps.DB.Limit(intLimit).Offset(offset).Find(&posts)
-	if result.Error != nil {
-		return nil, fmt.Errorf("find posts: %w", result.Error)
+	posts, err := ps.postRepository.FindAll(intLimit, offset)
+	if err != nil {
+		return nil, fmt.Errorf("find posts: %w", err)
 	}
 
 	return posts, nil
 }
 
 func (ps *PostService) Delete(postID string) error {
-	result := ps.DB.Delete(&models.Post{}, "id = ?", postID)
-	if result.Error != nil {
+	if err := ps.postRepository.DeleteByID(postID); err != nil {
 		return ErrPostNotFound
 	}
 	return nil

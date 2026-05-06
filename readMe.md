@@ -81,6 +81,7 @@ This project includes a preconfigured `.air.toml` file:
 go-layer/
 ├── controllers/      # HTTP handlers (request/response only)
 ├── services/         # Business logic layer
+├── repositories/     # Data access layer (GORM/Postgres queries)
 ├── routes/           # Route registration and middleware wiring
 ├── middleware/       # Cross-cutting HTTP middleware (auth, etc.)
 ├── models/           # GORM models and request/response structs
@@ -96,5 +97,6 @@ go-layer/
 
 - `routes` call `controllers`
 - `controllers` call `services`
-- `services` work with database/models/utilities
+- `services` call `repositories` and utilities
+- `repositories` handle database queries
 - Keep business logic in `services`, not in controllers

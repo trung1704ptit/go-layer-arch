@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-layer-arch/controllers"
 	"github.com/go-layer-arch/initializers"
+	"github.com/go-layer-arch/repositories"
 	"github.com/go-layer-arch/routes"
 	"github.com/go-layer-arch/services"
 )
@@ -32,7 +33,8 @@ func init() {
 
 	initializers.ConnectDB(&config)
 
-	authService := services.NewAuthService(initializers.DB)
+	authRepository := repositories.NewAuthRepository(initializers.DB)
+	authService := services.NewAuthService(authRepository)
 	AuthController = controllers.NewAuthController(authService)
 	AuthRouteController = routes.NewAuthRouteController(AuthController)
 
@@ -40,7 +42,8 @@ func init() {
 	UserController = controllers.NewUserController(userService)
 	UserRouteController = routes.NewRouteUserController(UserController)
 
-	postService := services.NewPostService(initializers.DB)
+	postRepository := repositories.NewPostRepository(initializers.DB)
+	postService := services.NewPostService(postRepository)
 	PostController = controllers.NewPostController(postService)
 	PostRouteController = routes.NewRoutePostController(PostController)
 

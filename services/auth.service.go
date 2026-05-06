@@ -3,20 +3,19 @@ package services
 import (
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/go-layer-arch/initializers"
 	"github.com/go-layer-arch/models"
+	"github.com/go-layer-arch/repositories"
 	"github.com/go-layer-arch/utils"
-	"gorm.io/gorm"
 )
 
 type AuthService struct {
-	DB *gorm.DB
+	authRepository repositories.AuthRepository
 }
 
-func NewAuthService(db *gorm.DB) AuthService {
-	return AuthService{DB: db}
+func NewAuthService(authRepository repositories.AuthRepository) AuthService {
+	return AuthService{authRepository: authRepository}
 }
 
 func (as *AuthService) SignUp(payload *models.SignUpInput) (*models.UserResponse, error) {
@@ -29,25 +28,12 @@ func (as *AuthService) SignUp(payload *models.SignUpInput) (*models.UserResponse
 		return nil, err
 	}
 
-	now := time.Now()
-	newUser := models.User{
-		Name:      payload.Name,
-		Email:     strings.ToLower(payload.Email),
-		Password:  hashedPassword,
-		Role:      "user",
-		Verified:  true,
-		Photo:     payload.Photo,
-		Provider:  "local",
-		CreatedAt: now,
-		UpdatedAt: now,
-	}
-
-	result := as.DB.Create(&newUser)
-	if result.Error != nil && strings.Contains(result.Error.Error(), "duplicate key value violates unique") {
+	newUser, err := as.authRepository.CreateUser(payload, hashedPassword)
+	if err != nil && strings.Contains(err.Error(), "duplicate key value violates unique") {
 		return nil, ErrUserAlreadyExists
 	}
-	if result.Error != nil {
-		return nil, fmt.Errorf("create user: %w", result.Error)
+	if err != nil {
+		return nil, fmt.Errorf("create user: %w", err)
 	}
 
 	return &models.UserResponse{
@@ -63,9 +49,8 @@ func (as *AuthService) SignUp(payload *models.SignUpInput) (*models.UserResponse
 }
 
 func (as *AuthService) SignIn(payload *models.SignInInput) (string, string, error) {
-	var user models.User
-	result := as.DB.First(&user, "email = ?", strings.ToLower(payload.Email))
-	if result.Error != nil {
+	user, err := as.authRepository.FindUserByEmail(payload.Email)
+	if err != nil {
 		return "", "", ErrInvalidCredentials
 	}
 
@@ -95,9 +80,8 @@ func (as *AuthService) RefreshAccessToken(refreshToken string) (string, error) {
 		return "", err
 	}
 
-	var user models.User
-	result := as.DB.First(&user, "id = ?", fmt.Sprint(sub))
-	if result.Error != nil {
+	user, err := as.authRepository.FindUserByID(fmt.Sprint(sub))
+	if err != nil {
 		return "", ErrRefreshUserNotFound
 	}
 
