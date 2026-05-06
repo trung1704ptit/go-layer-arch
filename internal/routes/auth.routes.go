@@ -2,8 +2,8 @@ package routes
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/go-layer-arch/controllers"
-	"github.com/go-layer-arch/middleware"
+	"github.com/go-layer-arch/internal/controllers"
+	"github.com/go-layer-arch/internal/middleware"
 )
 
 type AuthRouteController struct {

@@ -6,11 +6,12 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"github.com/go-layer-arch/controllers"
-	"github.com/go-layer-arch/initializers"
-	"github.com/go-layer-arch/repositories"
-	"github.com/go-layer-arch/routes"
-	"github.com/go-layer-arch/services"
+	"github.com/go-layer-arch/internal/controllers"
+	"github.com/go-layer-arch/internal/initializers"
+	"github.com/go-layer-arch/internal/repositories"
+	"github.com/go-layer-arch/internal/routes"
+	"github.com/go-layer-arch/internal/services"
+	"github.com/go-layer-arch/pkg/shared"
 )
 
 var (
@@ -34,8 +35,8 @@ func init() {
 	initializers.ConnectDB(&config)
 
 	authRepository := repositories.NewAuthRepository(initializers.DB)
-	authService := services.NewAuthService(authRepository)
-	AuthController = controllers.NewAuthController(authService)
+	authService := services.NewAuthService(config, authRepository)
+	AuthController = controllers.NewAuthController(authService, config.AccessTokenMaxAge, config.RefreshTokenMaxAge)
 	AuthRouteController = routes.NewAuthRouteController(AuthController)
 
 	userService := services.NewUserService()
@@ -65,7 +66,7 @@ func main() {
 	router := server.Group("/api")
 	router.GET("/healthchecker", func(ctx *gin.Context) {
 		message := "Welcome to Golang with Gorm and Postgres"
-		ctx.JSON(http.StatusOK, gin.H{"status": "success", "message": message})
+		shared.WriteSuccess(ctx, http.StatusOK, gin.H{"message": message})
 	})
 
 	AuthRouteController.AuthRoute(router)

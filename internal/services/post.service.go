@@ -1,24 +1,26 @@
 package services
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/go-layer-arch/models"
-	"github.com/go-layer-arch/repositories"
+	"github.com/go-layer-arch/internal/models"
+	"github.com/go-layer-arch/internal/repositories"
+	"gorm.io/gorm"
 )
 
-type PostService struct {
+type postService struct {
 	postRepository repositories.PostRepository
 }
 
 func NewPostService(postRepository repositories.PostRepository) PostService {
-	return PostService{postRepository: postRepository}
+	return &postService{postRepository: postRepository}
 }
 
-func (ps *PostService) Create(payload *models.CreatePostRequest, currentUser models.User) (*models.Post, error) {
+func (ps *postService) Create(payload *models.CreatePostRequest, currentUser models.User) (*models.Post, error) {
 	now := time.Now()
 	newPost := models.Post{
 		Title:     payload.Title,
@@ -40,9 +42,12 @@ func (ps *PostService) Create(payload *models.CreatePostRequest, currentUser mod
 	return &newPost, nil
 }
 
-func (ps *PostService) Update(postID string, payload *models.UpdatePost, currentUser models.User) (*models.Post, error) {
+func (ps *postService) Update(postID string, payload *models.UpdatePost, currentUser models.User) (*models.Post, error) {
 	updatedPost, err := ps.postRepository.FindByID(postID)
 	if err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, fmt.Errorf("find post by id: %w", err)
+		}
 		return nil, ErrPostNotFound
 	}
 
@@ -61,16 +66,19 @@ func (ps *PostService) Update(postID string, payload *models.UpdatePost, current
 	return updatedPost, nil
 }
 
-func (ps *PostService) FindByID(postID string) (*models.Post, error) {
+func (ps *postService) FindByID(postID string) (*models.Post, error) {
 	post, err := ps.postRepository.FindByID(postID)
 	if err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, fmt.Errorf("find post by id: %w", err)
+		}
 		return nil, ErrPostNotFound
 	}
 
 	return post, nil
 }
 
-func (ps *PostService) FindAll(page string, limit string) ([]models.Post, error) {
+func (ps *postService) FindAll(page string, limit string) ([]models.Post, error) {
 	intPage, _ := strconv.Atoi(page)
 	intLimit, _ := strconv.Atoi(limit)
 	offset := (intPage - 1) * intLimit
@@ -83,8 +91,11 @@ func (ps *PostService) FindAll(page string, limit string) ([]models.Post, error)
 	return posts, nil
 }
 
-func (ps *PostService) Delete(postID string) error {
+func (ps *postService) Delete(postID string) error {
 	if err := ps.postRepository.DeleteByID(postID); err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return fmt.Errorf("delete post: %w", err)
+		}
 		return ErrPostNotFound
 	}
 	return nil

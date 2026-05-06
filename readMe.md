@@ -47,7 +47,7 @@ Update `app.env` values for your environment:
 ### 4) Run the API
 
 ```bash
-go run main.go
+go run ./cmd/main.go
 ```
 
 Server starts on:
@@ -88,7 +88,8 @@ go-layer/
 ├── initializers/     # Config loading and DB connection bootstrap
 ├── utils/            # Shared helpers (tokens, password hashing)
 ├── migrate/          # Database migration entrypoint
-├── main.go           # Application bootstrap and dependency wiring
+├── cmd/main.go       # Application bootstrap and dependency wiring
+├── pkg/shared/       # Shared response helpers
 ├── app.env           # Runtime environment variables
 └── example.env       # Environment template
 ```

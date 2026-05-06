@@ -5,8 +5,9 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/go-layer-arch/models"
-	"github.com/go-layer-arch/services"
+	"github.com/go-layer-arch/internal/models"
+	"github.com/go-layer-arch/internal/services"
+	"github.com/go-layer-arch/pkg/shared"
 )
 
 type PostController struct {
@@ -22,21 +23,21 @@ func (pc *PostController) CreatePost(ctx *gin.Context) {
 	var payload *models.CreatePostRequest
 
 	if err := ctx.ShouldBindJSON(&payload); err != nil {
-		ctx.JSON(http.StatusBadRequest, err.Error())
+		shared.WriteError(ctx, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	newPost, err := pc.postService.Create(payload, currentUser)
 	if err != nil {
 		if errors.Is(err, services.ErrPostAlreadyExists) {
-			ctx.JSON(http.StatusConflict, gin.H{"status": "fail", "message": "Post with that title already exists"})
-			return
+			shared.WriteError(ctx, http.StatusConflict, "Post with that title already exists")
+		} else {
+			shared.WriteError(ctx, http.StatusBadGateway, "Something bad happened")
 		}
-		ctx.JSON(http.StatusBadGateway, gin.H{"status": "error", "message": err.Error()})
 		return
 	}
 
-	ctx.JSON(http.StatusCreated, gin.H{"status": "success", "data": newPost})
+	shared.WriteSuccess(ctx, http.StatusCreated, newPost)
 }
 
 func (pc *PostController) UpdatePost(ctx *gin.Context) {
@@ -45,16 +46,20 @@ func (pc *PostController) UpdatePost(ctx *gin.Context) {
 
 	var payload *models.UpdatePost
 	if err := ctx.ShouldBindJSON(&payload); err != nil {
-		ctx.JSON(http.StatusBadGateway, gin.H{"status": "fail", "message": err.Error()})
+		shared.WriteError(ctx, http.StatusBadRequest, err.Error())
 		return
 	}
 	updatedPost, err := pc.postService.Update(postId, payload, currentUser)
 	if err != nil {
-		ctx.JSON(http.StatusNotFound, gin.H{"status": "fail", "message": "No post with that title exists"})
+		if errors.Is(err, services.ErrPostNotFound) {
+			shared.WriteError(ctx, http.StatusNotFound, "No post with that title exists")
+		} else {
+			shared.WriteError(ctx, http.StatusBadGateway, "Something bad happened")
+		}
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"status": "success", "data": updatedPost})
+	shared.WriteSuccess(ctx, http.StatusOK, updatedPost)
 }
 
 func (pc *PostController) FindPostById(ctx *gin.Context) {
@@ -62,11 +67,15 @@ func (pc *PostController) FindPostById(ctx *gin.Context) {
 
 	post, err := pc.postService.FindByID(postId)
 	if err != nil {
-		ctx.JSON(http.StatusNotFound, gin.H{"status": "fail", "message": "No post with that title exists"})
+		if errors.Is(err, services.ErrPostNotFound) {
+			shared.WriteError(ctx, http.StatusNotFound, "No post with that title exists")
+		} else {
+			shared.WriteError(ctx, http.StatusBadGateway, "Something bad happened")
+		}
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"status": "success", "data": post})
+	shared.WriteSuccess(ctx, http.StatusOK, post)
 }
 
 func (pc *PostController) FindPosts(ctx *gin.Context) {
@@ -75,20 +84,24 @@ func (pc *PostController) FindPosts(ctx *gin.Context) {
 
 	posts, err := pc.postService.FindAll(page, limit)
 	if err != nil {
-		ctx.JSON(http.StatusBadGateway, gin.H{"status": "error", "message": err.Error()})
+		shared.WriteError(ctx, http.StatusBadGateway, "Something bad happened")
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"status": "success", "results": len(posts), "data": posts})
+	shared.WriteSuccess(ctx, http.StatusOK, gin.H{"results": len(posts), "posts": posts})
 }
 
 func (pc *PostController) DeletePost(ctx *gin.Context) {
 	postId := ctx.Param("postId")
 
 	if err := pc.postService.Delete(postId); err != nil {
-		ctx.JSON(http.StatusNotFound, gin.H{"status": "fail", "message": "No post with that title exists"})
+		if errors.Is(err, services.ErrPostNotFound) {
+			shared.WriteError(ctx, http.StatusNotFound, "No post with that title exists")
+		} else {
+			shared.WriteError(ctx, http.StatusBadGateway, "Something bad happened")
+		}
 		return
 	}
 
-	ctx.JSON(http.StatusNoContent, nil)
+	shared.WriteSuccess(ctx, http.StatusOK, gin.H{"deleted": true})
 }

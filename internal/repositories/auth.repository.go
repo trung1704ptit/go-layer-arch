@@ -4,19 +4,19 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-layer-arch/models"
+	"github.com/go-layer-arch/internal/models"
 	"gorm.io/gorm"
 )
 
-type AuthRepository struct {
-	DB *gorm.DB
+type authRepository struct {
+	db *gorm.DB
 }
 
 func NewAuthRepository(db *gorm.DB) AuthRepository {
-	return AuthRepository{DB: db}
+	return &authRepository{db: db}
 }
 
-func (ar *AuthRepository) CreateUser(payload *models.SignUpInput, hashedPassword string) (*models.User, error) {
+func (ar *authRepository) CreateUser(payload *models.SignUpInput, hashedPassword string) (*models.User, error) {
 	now := time.Now()
 	newUser := models.User{
 		Name:      payload.Name,
@@ -30,7 +30,7 @@ func (ar *AuthRepository) CreateUser(payload *models.SignUpInput, hashedPassword
 		UpdatedAt: now,
 	}
 
-	result := ar.DB.Create(&newUser)
+	result := ar.db.Create(&newUser)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -38,9 +38,9 @@ func (ar *AuthRepository) CreateUser(payload *models.SignUpInput, hashedPassword
 	return &newUser, nil
 }
 
-func (ar *AuthRepository) FindUserByEmail(email string) (*models.User, error) {
+func (ar *authRepository) FindUserByEmail(email string) (*models.User, error) {
 	var user models.User
-	result := ar.DB.First(&user, "email = ?", strings.ToLower(email))
+	result := ar.db.First(&user, "email = ?", strings.ToLower(email))
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -48,9 +48,9 @@ func (ar *AuthRepository) FindUserByEmail(email string) (*models.User, error) {
 	return &user, nil
 }
 
-func (ar *AuthRepository) FindUserByID(userID string) (*models.User, error) {
+func (ar *authRepository) FindUserByID(userID string) (*models.User, error) {
 	var user models.User
-	result := ar.DB.First(&user, "id = ?", userID)
+	result := ar.db.First(&user, "id = ?", userID)
 	if result.Error != nil {
 		return nil, result.Error
 	}

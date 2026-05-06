@@ -1,14 +1,14 @@
 package services
 
-import "github.com/go-layer-arch/models"
+import "github.com/go-layer-arch/internal/models"
 
-type UserService struct{}
+type userService struct{}
 
 func NewUserService() UserService {
-	return UserService{}
+	return &userService{}
 }
 
-func (us *UserService) BuildUserResponse(user models.User) *models.UserResponse {
+func (us *userService) BuildUserResponse(user models.User) *models.UserResponse {
 	return &models.UserResponse{
 		ID:        user.ID,
 		Name:      user.Name,

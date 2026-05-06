@@ -4,8 +4,9 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/go-layer-arch/models"
-	"github.com/go-layer-arch/services"
+	"github.com/go-layer-arch/internal/models"
+	"github.com/go-layer-arch/internal/services"
+	"github.com/go-layer-arch/pkg/shared"
 )
 
 type UserController struct {
@@ -20,5 +21,5 @@ func (uc *UserController) GetMe(ctx *gin.Context) {
 	currentUser := ctx.MustGet("currentUser").(models.User)
 	userResponse := uc.userService.BuildUserResponse(currentUser)
 
-	ctx.JSON(http.StatusOK, gin.H{"status": "success", "data": gin.H{"user": userResponse}})
+	shared.WriteSuccess(ctx, http.StatusOK, gin.H{"user": userResponse})
 }

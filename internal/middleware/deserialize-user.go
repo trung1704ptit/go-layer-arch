@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-layer-arch/initializers"
 	"github.com/go-layer-arch/models"
-	"github.com/go-layer-arch/utils"
+	"github.com/go-layer-arch/pkg/utils"
 )
 
 func DeserializeUser() gin.HandlerFunc {
