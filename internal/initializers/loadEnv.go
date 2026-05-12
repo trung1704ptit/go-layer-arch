@@ -27,8 +27,8 @@ type Config struct {
 	RefreshTokenMaxAge     int           `mapstructure:"REFRESH_TOKEN_MAXAGE"`
 }
 
-func LoadConfig(path string) (config Config, err error) {
-	viper.AddConfigPath(path)
+func LoadConfig() (config Config, err error) {
+	viper.AddConfigPath(".")
 	viper.SetConfigType("env")
 	viper.SetConfigName("app")
 

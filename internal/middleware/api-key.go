@@ -9,7 +9,7 @@ import (
 )
 
 func RequireAPIKey() gin.HandlerFunc {
-	config, _ := initializers.LoadConfig(".")
+	config, _ := initializers.LoadConfig()
 	expectedKey := config.BackendAPIKey
 
 	return func(ctx *gin.Context) {

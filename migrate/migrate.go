@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	config, err := initializers.LoadConfig(".")
+	config, err := initializers.LoadConfig()
 	if err != nil {
 		log.Fatal("🚀 Could not load environment variables", err)
 	}

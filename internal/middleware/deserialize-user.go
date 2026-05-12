@@ -26,11 +26,11 @@ func DeserializeUser() gin.HandlerFunc {
 		}
 
 		if access_token == "" {
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"status": "fail", "message": "You are not logged in"})
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"status": "fail", "message": "Unauthorized"})
 			return
 		}
 
-		config, _ := initializers.LoadConfig(".")
+		config, _ := initializers.LoadConfig()
 		sub, err := utils.ValidateToken(access_token, config.AccessTokenPublicKey)
 		if err != nil {
 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"status": "fail", "message": err.Error()})
