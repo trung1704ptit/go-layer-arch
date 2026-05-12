@@ -8,6 +8,12 @@ import (
 	"gorm.io/gorm"
 )
 
+type AuthRepository interface {
+	CreateUser(payload *models.SignUpInput, hashedPassword string) (*models.User, error)
+	FindUserByEmail(email string) (*models.User, error)
+	FindUserByID(userID string) (*models.User, error)
+}
+
 type authRepository struct {
 	db *gorm.DB
 }

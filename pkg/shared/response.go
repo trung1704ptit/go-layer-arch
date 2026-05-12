@@ -6,6 +6,6 @@ func WriteError(ctx *gin.Context, statusCode int, message string) {
 	ctx.AbortWithStatusJSON(statusCode, gin.H{"error": message})
 }
 
-func WriteSuccess(ctx *gin.Context, statusCode int, data interface{}) {
+func WriteSuccess(ctx *gin.Context, statusCode int, data any) {
 	ctx.JSON(statusCode, gin.H{"data": data})
 }

@@ -35,6 +35,7 @@ Update `app.env` values for your environment:
 - `POSTGRES_PORT`
 - `PORT`
 - `CLIENT_ORIGIN`
+- `BACKEND_API_KEY`
 - `ACCESS_TOKEN_PRIVATE_KEY`
 - `ACCESS_TOKEN_PUBLIC_KEY`
 - `ACCESS_TOKEN_EXPIRED_IN`
@@ -43,6 +44,14 @@ Update `app.env` values for your environment:
 - `REFRESH_TOKEN_PUBLIC_KEY`
 - `REFRESH_TOKEN_EXPIRED_IN`
 - `REFRESH_TOKEN_MAXAGE`
+
+`BACKEND_API_KEY` is used for server-to-server communication between a BFF, such as a Next.js API route layer, and this Go backend. BFF requests must include the key in the `X-API-Key` header:
+
+```http
+X-API-Key: <BACKEND_API_KEY>
+```
+
+Do not expose this value to browser code. In Next.js, keep it in a server-only environment variable, for example `GO_BACKEND_API_KEY`, without the `NEXT_PUBLIC_` prefix.
 
 ### 4) Run the API
 
@@ -108,6 +117,7 @@ Then edit both generated files and add your SQL.
 ```text
 go-layer/
 ├── cmd/              # App entrypoints
+├── docs/             # OpenAPI/Swagger documentation
 ├── internal/         # Application-private layers (controllers/services/repos/...)
 ├── migrate/          # Migration runner entrypoint
 ├── migrations/       # Versioned SQL schema migrations (*.up.sql/*.down.sql)
@@ -125,3 +135,9 @@ go-layer/
 - `services` call `repositories` and utilities
 - `repositories` handle database queries
 - Keep business logic in `services`, not in controllers
+
+## API Documentation
+
+Swagger/OpenAPI docs are available in `docs/openapi.yaml`.
+
+All `/api` endpoints require the BFF API key via `X-API-Key`. Endpoints that act on the current user also require the existing user session token through the `access_token` cookie or `Authorization: Bearer <access_token>` header.

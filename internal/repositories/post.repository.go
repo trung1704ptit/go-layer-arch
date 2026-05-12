@@ -5,6 +5,14 @@ import (
 	"gorm.io/gorm"
 )
 
+type PostRepository interface {
+	Create(post *models.Post) error
+	FindByID(postID string) (*models.Post, error)
+	Update(existingPost *models.Post, updates models.Post) error
+	FindAll(limit int, offset int) ([]models.Post, error)
+	DeleteByID(postID string) error
+}
+
 type postRepository struct {
 	db *gorm.DB
 }
