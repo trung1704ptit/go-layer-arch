@@ -30,6 +30,8 @@ func TestCreateFeatureScaffold(t *testing.T) {
 	mainFile := `package main
 
 import (
+	"log"
+
 	"github.com/gin-gonic/gin"
 	"github.com/go-layer-arch/internal/controllers"
 	"github.com/go-layer-arch/internal/initializers"
@@ -43,10 +45,6 @@ var (
 
 	PostController      controllers.PostController
 	PostRouteController routes.PostRouteController
-
-	// Feature controllers are injected by ` + "`make feature`" + `.
-	// FEATURE CONTROLLERS START
-	// FEATURE CONTROLLERS END
 )
 
 func init() {
@@ -55,18 +53,14 @@ func init() {
 	PostController = controllers.NewPostController(postService)
 	PostRouteController = routes.NewRoutePostController(PostController)
 
-	// Feature dependencies are injected by ` + "`make feature`" + `.
-	// FEATURE WIRING START
-	// FEATURE WIRING END
+	server = gin.Default()
 }
 
 func main() {
 	router := server.Group("/api")
 	PostRouteController.PostRoute(router)
 
-	// Feature routes are injected by ` + "`make feature`" + `.
-	// FEATURE ROUTES START
-	// FEATURE ROUTES END
+	log.Fatal(server.Run(":8000"))
 }
 `
 
@@ -76,6 +70,14 @@ func main() {
 
 	feat, err := parseFeatureName("my_feature")
 	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := createFeatureFiles(feat); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := updateMain(feat); err != nil {
 		t.Fatal(err)
 	}
 

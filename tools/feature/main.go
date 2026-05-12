@@ -10,12 +10,6 @@ import (
 	"strings"
 )
 
-const (
-	controllerMarker = "\t// FEATURE CONTROLLERS END"
-	wiringMarker     = "\t// FEATURE WIRING END"
-	routeMarker      = "\t// FEATURE ROUTES END"
-)
-
 type feature struct {
 	Snake     string
 	Pascal    string
@@ -133,7 +127,7 @@ func createFeatureFiles(feat feature) error {
 
 func writeGoFile(path string, content string) error {
 	if _, err := os.Stat(path); err == nil {
-		return fmt.Errorf("%s already exists", path)
+		return nil
 	} else if !os.IsNotExist(err) {
 		return err
 	}
@@ -158,7 +152,7 @@ func updateMain(feat feature) error {
 	}
 
 	content := string(contentBytes)
-	content, err = insertBeforeMarker(content, controllerMarker, feat.Pascal+"Controller", fmt.Sprintf(
+	content, err = insertIntoVarBlock(content, feat.Pascal+"Controller", fmt.Sprintf(
 		"\t%sController      controllers.%sController\n\t%sRouteController routes.%sRouteController\n",
 		feat.Pascal,
 		feat.Pascal,
@@ -169,7 +163,7 @@ func updateMain(feat feature) error {
 		return err
 	}
 
-	content, err = insertBeforeMarker(content, wiringMarker, "New"+feat.Pascal+"Repository", fmt.Sprintf(
+	content, err = insertBeforeAnchor(content, "\n\tserver = gin.Default()", "New"+feat.Pascal+"Repository", fmt.Sprintf(
 		"\t%sRepository := repositories.New%sRepository(initializers.DB)\n\t%sService := services.New%sService(%sRepository)\n\t%sController = controllers.New%sController(%sService)\n\t%sRouteController = routes.NewRoute%sController(%sController)\n\n",
 		feat.Camel,
 		feat.Pascal,
@@ -187,7 +181,7 @@ func updateMain(feat feature) error {
 		return err
 	}
 
-	content, err = insertBeforeMarker(content, routeMarker, feat.Pascal+"Route(router)", fmt.Sprintf(
+	content, err = insertBeforeAnchor(content, "\n\tlog.Fatal(server.Run", feat.Pascal+"Route(router)", fmt.Sprintf(
 		"\t%sRouteController.%sRoute(router)\n",
 		feat.Pascal,
 		feat.Pascal,
@@ -204,17 +198,36 @@ func updateMain(feat feature) error {
 	return os.WriteFile(path, formatted, 0644)
 }
 
-func insertBeforeMarker(content string, marker string, unique string, addition string) (string, error) {
+func insertIntoVarBlock(content string, unique string, addition string) (string, error) {
 	if strings.Contains(content, unique) {
 		return content, nil
 	}
 
-	index := strings.Index(content, marker)
-	if index == -1 {
-		return "", fmt.Errorf("missing scaffold marker %q in cmd/main.go", strings.TrimSpace(marker))
+	start := strings.Index(content, "var (")
+	if start == -1 {
+		return "", fmt.Errorf("missing var block in cmd/main.go")
 	}
 
-	return content[:index] + addition + content[index:], nil
+	end := strings.Index(content[start:], "\n)")
+	if end == -1 {
+		return "", fmt.Errorf("missing end of var block in cmd/main.go")
+	}
+	index := start + end
+
+	return content[:index] + "\n" + addition + content[index:], nil
+}
+
+func insertBeforeAnchor(content string, anchor string, unique string, addition string) (string, error) {
+	if strings.Contains(content, unique) {
+		return content, nil
+	}
+
+	index := strings.Index(content, anchor)
+	if index == -1 {
+		return "", fmt.Errorf("missing anchor %q in cmd/main.go", strings.TrimSpace(anchor))
+	}
+
+	return content[:index] + "\n" + addition + content[index:], nil
 }
 
 func modelTemplate(feat feature) string {
