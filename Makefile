@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: migrate-up migrate-down migrate-create
+.PHONY: migrate-up migrate-down migrate-create feature
 
 migrate-up:
 	go run ./migrate up
@@ -26,3 +26,7 @@ migrate-create:
 	printf -- "-- Write your UP migration SQL here\n" > "$$up_file"; \
 	printf -- "-- Write your DOWN migration SQL here\n" > "$$down_file"; \
 	echo "Created $$up_file and $$down_file"
+
+feature:
+	@if [ -z "$(name)" ]; then echo "Usage: make feature name=my_feature"; exit 1; fi
+	go run ./tools/feature -name "$(name)"

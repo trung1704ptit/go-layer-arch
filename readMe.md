@@ -2,6 +2,16 @@
 
 This project is a layered REST API built with Gin, GORM, and PostgreSQL.
 
+## Features
+
+- Layered API structure with routes, controllers, services, and repositories
+- JWT-based user authentication with access and refresh tokens
+- BFF-to-backend API key protection with `middleware.RequireAPIKey()`
+- Feature scaffolding with `make feature name=my_feature`
+- PostgreSQL persistence through GORM
+- Versioned SQL migrations with `golang-migrate`
+- Swagger/OpenAPI documentation in `docs/openapi.yaml`
+
 ## Setup
 
 ### 1) Prerequisites
@@ -112,6 +122,24 @@ This creates:
 
 Then edit both generated files and add your SQL.
 
+### 7) Generate a feature scaffold
+
+Create a new feature with placeholder files for every application layer:
+
+```bash
+make feature name=my_feature
+```
+
+This creates:
+
+- `internal/models/my_feature.model.go`
+- `internal/repositories/my_feature.repository.go`
+- `internal/services/my_feature.service.go`
+- `internal/controllers/my_feature.controller.go`
+- `internal/routes/my_feature.routes.go`
+
+The command also injects the repository, service, controller, and route wiring into `cmd/main.go`. The generated route exposes a placeholder `GET /api/my-features/` endpoint that you can replace with real handlers.
+
 ## Project Structure
 
 ```text
@@ -124,6 +152,7 @@ go-layer/
 ├── cmd/main.go       # Application bootstrap and dependency wiring
 ├── pkg/shared/       # Shared response helpers
 ├── pkg/utils/        # Shared utility helpers
+├── tools/feature/    # Feature scaffold generator
 ├── app.env           # Runtime environment variables
 └── example.env       # Environment template
 ```
